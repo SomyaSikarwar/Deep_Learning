@@ -1,0 +1,63 @@
+#Implement the concept of image denoising using autoencoders on MNIST data set
+
+import pandas as pd
+import numpy as np
+from tensorflow.keras.layers import Dense
+from tensorflow.keras.models import Sequential
+
+data = pd.read_csv('mnist_784_csv.csv')
+data.head
+
+x = data.iloc[ : ,0:784]
+y = data['class']
+
+from sklearn.model_selection import train_test_split
+x_train , x_test ,y_train ,y_test = train_test_split(x,y,test_size = 0.3)
+
+x_train = x_train/255
+x_test = x_test/255
+x_train = x_train.reshape(x_train.shape[0],28*28)
+x_test = x_test.reshape(x_test.shape[0],28*28)
+
+noise_factor = 0.2
+x_train_noisy = x_train + noise_factor*np.random.normal(loc = 0 , scale =1.0 , size = x_train.shape)
+x_test_noisy = x_test + noise_factor*np.random.normal(loc = 0 , scale =1.0 , size = x_test.shape)
+x_train_noisy = np.clip(x_train_noisy , 0.,1.)
+x_test_noisy = np.clip(x_test_noisy , 0.,1.)
+
+X_Train = x_train.reshape(x_train.shape[0],28,28)
+X_Test = x_test.reshape(x_test.shape[0],28,28)
+
+model = Sequential()
+model.add(Dense(500, input_shape = (28*28,), activation = 'relu'))
+model.add(Dense(300, activation = 'relu'))
+model.add(Dense(100, activation = 'relu'))
+model.add(Dense(300, activation = 'relu'))
+model.add(Dense(500, activation = 'relu'))
+model.add(Dense(784, activation = 'sigmoid'))
+model.compile(loss='mean_squared_error', optimizer = 'adam')
+H = model.fit(x_train_noisy, x_train, epochs = 20, batch_size = 100)
+
+denoised_image = model.predict(x_test_noisy)
+n = 10  # Number of images to display
+plt.figure(figsize=(20, 6))
+for i in range(n):
+    # Display original images
+    ax = plt.subplot(3, n, i + 1)
+    plt.imshow(x_test[i].reshape(28, 28), cmap='gray')
+    plt.title("Original")
+    plt.axis("off")
+
+    # Display noisy images
+    ax = plt.subplot(3, n, i + 1 + n)
+    plt.imshow(x_test_noisy[i].reshape(28, 28), cmap='gray')
+    plt.title("Noisy")
+    plt.axis("off")
+
+    # Display denoised images
+    ax = plt.subplot(3, n, i + 1 + 2*n)
+    plt.imshow(denoised_image[i].reshape(28, 28), cmap='gray')
+    plt.title("Denoised")
+    plt.axis("off")
+
+plt.show()
