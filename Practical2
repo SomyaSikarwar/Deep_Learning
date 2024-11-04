@@ -1,0 +1,49 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+import tensorflow as tf
+from tensorflow import keras
+import matplotlib.pyplot as plt
+import random
+import numpy as np
+
+data=pd.read_csv('mnist_784_csv.csv')
+data.head()
+
+x=data.drop(['class'], axis=1)
+y=data['class'].values
+
+from sklearn.model_selection import train_test_split
+
+x_train, x_test, y_train, y_test = train_test_split(x,y,test_size=0.3,random_state=0)
+
+x_train = x_train/255
+x_test=x_test/255
+
+model = keras.Sequential([
+    keras.layers.Flatten(input_shape=(784,)),
+    keras.layers.Dense(256,activation='relu'),
+    keras.layers.Dense(128,activation='relu'),
+    keras.layers.Dense(32,activation='relu'),
+    keras.layers.Dense(10,activation='softmax')
+])
+
+model.compile(optimizer='sgd', 
+              loss="sparse_categorical_crossentropy",
+              metrics=["accuracy"])
+
+history = model.fit(x_train, y_train, epochs=10)
+
+test_loss, test_accuracy = model.evaluate(x_test,y_test)
+x_test_img = x_test.to_numpy().reshape(x_test.shape[0],28,28)
+plt.imshow(x_test_img[0])
+
+n=random.randint(0,500)
+plt.imshow(x_test_img[n])
+predicted_value = model.predict(x_test)
+print(np.argmax(predicted_value[n]))
+
+plt.plot(history.history['loss'],label='loss',color='g')
+plt.plot(history.history['accuracy'],label='accuracy',color='b')
+plt.xlabel('epochs')
+plt.legend()
+plt.show()
