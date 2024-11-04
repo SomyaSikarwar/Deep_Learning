@@ -1,0 +1,44 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+import tensorflow as tf
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, Flatten
+
+train = pd.read_csv('CIFARtrain.csv')
+test = pd.read_csv('CIFARtest.csv')
+
+x_train = train.iloc[:,0:3072]
+x_train.head()
+x_test = test.iloc[:,0:3072]
+y_train = train['label']
+x_train.shape
+
+x_train = x_train.astype('float32')/255
+x_test = x_test.astype('float32')/255
+model = Sequential()
+model.add(Flatten(input_shape = (3072,)))
+model.add(Dense(50,activation = 'relu'))
+model.add(Dense(20,activation = 'relu'))
+model.add(Dense(10,activation = 'softmax'))
+model.compile(optimizer = 'sgd', loss = 'categorical_crossentropy', metrics = ['accuracy']
+from keras.utils import to_categorical
+
+Y_train = to_categorical(y_train, 10)
+
+model.fit(x_train,Y_train,epochs=30, batch_size=100)
+X_test = x_test.to_numpy().reshape(x_test.shape[0],32,32,3)
+X_test.shape
+X_train = x_train.to_numpy().reshape(x_train.shape[0], 32,32,3)
+pred = model.predict(x_test)
+import numpy as np
+class_names = ['Airplane', 'Automobile', 'Bird', 'Cat', 'Deer', 'Dog', 'Frog', 'Horse', 'Ship', 'Truck']
+
+import random
+
+n = random.randint(0,1000)
+pred_ind = np.argmax(pred[n])
+pred_class = class_names[pred_ind]
+plt.imshow(X_test[n])
+print(x_test.iloc[n])
+plt.title(pred_class)
+plt.axis('off')
