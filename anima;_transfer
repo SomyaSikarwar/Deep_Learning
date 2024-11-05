@@ -1,0 +1,67 @@
+import tensorflow as tf
+from tensorflow.keras.applications import MobileNetV2
+from tensorflow.keras.layers import Dense, GlobalAveragePooling2D
+from tensorflow.keras.models import Model
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras.optimizers import Adam
+import matplotlib.pyplot as plt
+import numpy as np
+# Load the MobileNetV2 model pre-trained on ImageNet, without the top layer
+base_model = MobileNetV2(weights='imagenet', include_top=False,␣
+↪input_shape=(224, 224, 3))
+# Freeze the base model layers so they don't get updated during training
+base_model.trainable = False
+ # Add custom classification layers for the animal dataset
+x = base_model.output
+x = GlobalAveragePooling2D()(x) # Pooling layer
+x = Dense(128, activation='relu')(x) # Dense layer
+predictions = Dense(10, activation='softmax')(x) # Output layer for 10 classes
+[5]: # Create the final model
+model = Model(inputs=base_model.input, outputs=predictions)
+# Compile the model
+model.compile(optimizer=Adam(learning_rate=0.001),␣
+↪loss='categorical_crossentropy', metrics=['accuracy'])
+[7]: # Set up data generators with train-validation split
+datagen = ImageDataGenerator(rescale=1./255, validation_split=0.2,␣
+↪horizontal_flip=True, zoom_range=0.2, shear_range=0.2)
+[8]: # Training data generator
+train_generator = datagen.flow_from_directory(
+'raw-img',
+target_size=(224, 224),
+
+batch_size=32,
+class_mode='categorical',
+subset='training' # Set as training data
+)
+Found 20947 images belonging to 10 classes.
+[9]: # Validation data generator
+validation_generator = datagen.flow_from_directory(
+'raw-img',
+target_size=(224, 224),
+batch_size=32,
+class_mode='categorical',
+subset='validation' # Set as validation data
+)
+
+model.fit(train_generator, epochs=10, validation_data=validation_generator)
+
+
+y: 0.9459 - loss: 0.1891
+Test Accuracy: 0.9462920427322388
+[12]: # Predict 
+
+model.predict(x_val)
+1/1  2s 2s/step
+[13]: # Get the actual class labels from the validation set
+predicted_labels = np.argmax(predictions, axis=1)
+[15]: # Convert the dict_keys to a list
+class_labels = list(train_generator.class_indices.keys())
+# Number of images to display
+n = 10
+# Plot images with predicted and actual classes
+plt.figure(figsize=(20, 6))
+for i in range(n):
+# Display the image
+ax = plt.subplot(2, n, i + 1)
+plt.imshow(x_val[i]) # Display the image
+# Get actual and
