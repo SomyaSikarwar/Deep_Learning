@@ -1,0 +1,78 @@
+# TENSORFLOW
+
+import tensorflow as tf
+import numpy as np
+a=tf.constant(15)
+b=tf.constant(20)
+print(a*b)
+
+x=np.random.rand(100).astype(np.float32)
+print(x)
+
+y=0.2*x+0.2
+W=tf.Variable(tf.random.normal([1]))
+b=tf.Variable(tf.zeros([1]))
+def mse_loss():
+    y_pred=W*x+b
+    loss=tf.reduce_mean(tf.square(y_pred-y))
+    return loss
+optimizer=tf.optimizers.Adam()
+for step in range(5000):
+    optimizer.minimize(mse_loss, var_list=[W,b])
+    if step%500==0:
+        print(step, W.numpy(),b.numpy())
+
+
+# PYTORCH
+
+
+import torch
+import numpy as np
+data = [
+[1,2],
+[3,4]
+]
+x_data = torch.tensor(data)
+print(type(x_data))
+np_array = np.array(data)
+x_np = torch.from_numpy(np_array)
+print(x_np)
+print(type(x_np))
+x_ones = torch.ones_like(x_data)
+print("One Tensor: \n",x_ones)
+x_rand = torch.rand_like(x_data,dtype=torch.float)
+print(x_rand)
+shape = (2,3)
+random_tensor = torch.rand(shape)
+print(random_tensor)
+print(type(random_tensor))
+ones_tensor = torch.ones(shape)
+print(ones_tensor)
+print(type(ones_tensor))
+zeros_tensor = torch.zeros(shape)
+print(zeros_tensor)
+print(type(zeros_tensor))
+tensor = torch.rand(3,4)
+print(tensor)
+tensor.shape
+tensor.dtype
+tensor.device
+if torch.cuda.is_available():
+    tensor = tensor.to('cuda')
+    print("Device tensor is stored in ", tensor.device)
+tensor = torch.ones(4,4)
+print(tensor)
+tensor1 = torch.zeros(4,4)
+print(tensor1)
+tensor2 = torch.cat([tensor,tensor1])
+print(tensor2)
+tensor.mul(tensor1)
+tensor * tensor1
+tensor.T
+tensor.add_(3)
+print(tensor)
+t = torch.ones(5)
+print(t)
+n = t.numpy()
+print(n)
+print(type(n))
