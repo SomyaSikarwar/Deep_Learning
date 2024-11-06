@@ -1,44 +1,61 @@
-import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Flatten
-
-train = pd.read_csv('CIFARtrain.csv')
-test = pd.read_csv('CIFARtest.csv')
-
-x_train = train.iloc[:,0:3072]
-x_train.head()
-x_test = test.iloc[:,0:3072]
-y_train = train['label']
-x_train.shape
-
-x_train = x_train.astype('float32')/255
-x_test = x_test.astype('float32')/255
-model = Sequential()
-model.add(Flatten(input_shape = (3072,)))
-model.add(Dense(50,activation = 'relu'))
-model.add(Dense(20,activation = 'relu'))
-model.add(Dense(10,activation = 'softmax'))
-model.compile(optimizer = 'sgd', loss = 'categorical_crossentropy', metrics = ['accuracy']
-from keras.utils import to_categorical
-
-Y_train = to_categorical(y_train, 10)
-
-model.fit(x_train,Y_train,epochs=30, batch_size=100)
-X_test = x_test.to_numpy().reshape(x_test.shape[0],32,32,3)
-X_test.shape
-X_train = x_train.to_numpy().reshape(x_train.shape[0], 32,32,3)
-pred = model.predict(x_test)
-import numpy as np
-class_names = ['Airplane', 'Automobile', 'Bird', 'Cat', 'Deer', 'Dog', 'Frog', 'Horse', 'Ship', 'Truck']
-
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
 import random
+# Parameters
+image_size = (32, 32)  # CIFAR-10 images are 32x32 pixels
+batch_size = 100
+num_classes = 10
+epochs = 30
+# Directory paths
+train_dir = r"E:\DL\Deep Learning Datasets\4 CIFAR 10 images dataset\cifar10_dataset\cifar10_dataset"  # Replace with the path to your training images folder
+test_dir = r"E:\DL\Deep Learning Datasets\4 CIFAR 10 images dataset\cifar10_dataset\cifar10_dataset"    # Replace with the path to your test images folder
+# Load images and labels using ImageDataGenerator
+train_datagen = ImageDataGenerator(rescale=1.0/255.0)
+test_datagen = ImageDataGenerator(rescale=1.0/255.0)
 
-n = random.randint(0,1000)
-pred_ind = np.argmax(pred[n])
-pred_class = class_names[pred_ind]
-plt.imshow(X_test[n])
-print(x_test.iloc[n])
+train_generator = train_datagen.flow_from_directory(
+    train_dir,
+    target_size=image_size,
+    batch_size=batch_size,
+    class_mode='categorical',
+    shuffle=True
+)
+
+test_generator = test_datagen.flow_from_directory(
+    test_dir,
+    target_size=image_size,
+    batch_size=batch_size,
+    class_mode='categorical',
+    shuffle=False
+)
+# Build the model
+model = Sequential([
+    Flatten(input_shape=(32, 32, 3)),
+    Dense(50, activation='relu'),
+    Dense(20, activation='relu'),
+    Dense(num_classes, activation='softmax')
+])
+
+model.compile(optimizer='sgd', loss='categorical_crossentropy', metrics=['accuracy'])
+# Train the model
+model.fit(train_generator, epochs=epochs, batch_size=batch_size)
+# Predict on test images
+pred = model.predict(test_generator)
+class_names = ['Airplane', 'Automobile', 'Bird', 'Cat', 'Deer', 'Dog', 'Frog', 'Horse', 'Ship', 'Truck']
+# # Display a random test image with prediction
+# n = random.randint(0, len(test_generator.filenames) - 1)
+
+batch = next(test_generator)  # Get the next batch of images
+images, labels = batch
+n = random.randint(0, len(images) - 1)
+# Load and display the nth image from test set
+image, label = test_generator[n]  # Get image and label
+plt.imshow(image[0])  # Display the first image in the batch
+pred_class = class_names[np.argmax(pred[n])]
 plt.title(pred_class)
 plt.axis('off')
+plt.show()
