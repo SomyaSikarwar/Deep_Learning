@@ -1,0 +1,35 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import tensorflow as tf
+from tensorflow.keras.models import Model
+from tensorflow.keras.layers import Input, Dense, Flatten, Reshape
+data = pd.read_csv(r"E:\DL\Deep Learning Datasets\3 MNIST\mnist_784_csv.csv")
+print(data.head())
+
+X = data.iloc[:,:-1].values / 255.0 #normalise pixel values
+X = X.reshape(-1,28,28,1) #Reshape to 28×28×1
+noise_factor = 0.5
+X_noisy = X + noise_factor * np.random.normal(loc=0.0, scale=1.0, size=X.shape)
+X_noisy = np.clip(X_noisy, 0., 1.)
+input_img = Input(shape=(28,28,1))
+x = Flatten()(input_img)
+x = Dense(128,activation='relu')(x)
+encoded = Dense(64,activation='relu')(x)
+x = Dense(128,activation='relu')(encoded)
+x = Dense(28*28,activation='sigmoid')(x)
+decoded = Reshape((28,28,1))(x)
+autoencoder = Model(input_img,decoded)
+autoencoder.compile(optimizer='adam',loss='binary_crossentropy')
+autoencoder.fit(X_noisy,X,epochs=5,batch_size=32,shuffle=True,validation_split=0.2)
+
+denoised_images = autoencoder.predict(X_noisy)
+
+n = 10
+plt.figure(figsize=(20,4))
+for i in range(n):
+    ax = plt.subplot(2,n,i+1)
+    plt.imshow(X_noisy[i].reshape(28,28),cmap='gray')
+    ax = plt.subplot(2,n,i+1+n)
+    plt.imshow(denoised_images[i].reshape(28,28),cmap='gray')
+plt.show()
