@@ -1,0 +1,20 @@
+import numpy as np
+def sigmoid(x):
+    return 1/(1+np.exp(-x))
+input_layer=5
+hidden_layer=10
+output_layer=1
+a=np.random.randn(hidden_layer,input_layer)
+b=np.random.randn(hidden_layer,hidden_layer)
+c=np.random.randn(output_layer,hidden_layer)
+bh=np.zeros((hidden_layer,1))
+by=np.zeros((output_layer,1))
+h=np.zeros((10,1))
+def rnn_step(x,h):
+    h=sigmoid(np.dot(a,x)+np.dot(b,h)+bh)
+    y=np.dot(c,h)+by
+    return h,y
+x = [np.random.randn(5,1) for _ in range(6)]
+for t in range(len(x)):
+    h,y = rnn_step(x[t],h)
+    print(f"Time step {t}, Output: {y}")
