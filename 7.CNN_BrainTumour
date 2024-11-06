@@ -1,0 +1,75 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import tensorflow as tf
+import tensorflow.keras as keras
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+train_data=ImageDataGenerator(rescale=1/255)
+test_data= ImageDataGenerator(rescale=1/255) 
+train_path = r"D:\datasets\DL\brain tumour\Training"
+test_path = r"D:\datasets\DL\brain tumour\Testing"
+train= train_data.flow_from_directory(
+    train_path,
+    target_size=(224,224),
+    batch_size=64,
+    class_mode="categorical"
+)
+
+classes= [x for x in train.class_indices.keys()]
+classes
+test= test_data.flow_from_directory(
+    test_path,
+    target_size=(224,224),
+    batch_size=64,
+    class_mode="categorical"
+)
+model= keras.models.Sequential([
+    keras.layers.Conv2D(32,(3,3), activation='relu',input_shape=(224,224,3)),
+    keras.layers.MaxPooling2D(2,2),
+
+    keras.layers.Conv2D(64,(3,3),activation= 'relu'),
+    keras.layers.MaxPooling2D(2,2),
+
+    keras.layers.Conv2D(64,(3,3), activation='relu'),
+    keras.layers.MaxPooling2D(2,2),
+
+    keras.layers.Conv2D(32,(3,3), activation='relu'),
+    keras.layers.MaxPooling2D(2,2),
+
+    keras.layers.Flatten(),
+
+    keras.layers.Dense(128,activation='relu'),
+    keras.layers.Dense(4,activation='softmax')
+])
+model.compile(optimizer="sgd",loss="categorical_crossentropy",metrics=["accuracy"])
+report = model.fit(train,epochs=20,validation_data=test)
+plt.figure(figsize=(10,5))
+plt.title("Model Performance")
+plt.subplot(1,2,1)
+plt.xlabel('Epochs')
+plt.ylabel('Accuracy')
+plt.plot(report.history['accuracy'], label='Training Accuracy')
+plt.legend()
+plt.subplot(1,2,2)
+plt.xlabel('Epochs')
+plt.ylabel('Score')
+plt.plot(report.history['loss'], label='Training Loss')
+plt.xlabel('Epochs')
+plt.ylabel('Loss')
+plt.legend()
+plt.show()
+def softmax_to_category(x):
+    return np.argmax(x)
+
+
+plt.figure(figsize=(8,12))
+
+for x in range(6, 12):
+    plt.subplot(3, 2, x + 1 - 6)
+    # Reshape the image to add a batch dimension
+    image = test[0][0][x]
+    image = np.expand_dims(image, axis=0)  # Add batch dimension
+
+    plt.xlabel(f"Model Prediction Category : {classes[softmax_to_category(model.predict(image))]}")
+    plt.ylabel(f"Actual Category : {classes[softmax_to_category(test[0][1][x])]}")
+    plt.imshow(test[0][0][x])
